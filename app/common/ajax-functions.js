@@ -14,7 +14,7 @@ var ajaxFunctions = {
 
       document.addEventListener('DOMContentLoaded', fn, false);
    },
-   ajaxRequest: function ajaxRequest (method, url, callback, postParams) {
+   ajaxRequest: function ajaxRequest (method, url, callback, params) {
       var xmlhttp = new XMLHttpRequest();
 
       xmlhttp.onreadystatechange = function () {
@@ -23,7 +23,9 @@ var ajaxFunctions = {
          }
       };
 
-      let p = "json="+encodeURIComponent(JSON.stringify(postParams));
+      let p = "json="+encodeURIComponent(JSON.stringify(params));
+            console.log("Send! ", appUrl, p);
+
       xmlhttp.open(method, url+"?"+p, true);
       xmlhttp.send();
    }

@@ -10,6 +10,7 @@ function PollHandler () {
 		let userid = req.user.github && req.user.github.id || null,
 			latestPolls, activePolls, userPolls;
 
+		// OTS/Question: How better?
 		Polls
 			.aggregate({ $sort: { date: 1 }}, { $limit: 100 })
 			.exec(function (err, result) {
@@ -18,7 +19,7 @@ function PollHandler () {
 					latestPolls = result;
 					
 					Polls
-						.aggregate({ $sort: { votes: 1 }}, { $limit: 100 })
+						.aggregate({ $sort: { totalVotes: 1 }}, { $limit: 100 })
 						.exec(function (err, result) {
 							if( err ) res.json({"error": err});
 							else  if( userid ) {
@@ -57,7 +58,9 @@ function PollHandler () {
 			date: new Date().getTime(),
 			title: q.title,
 			question: q.question,
-			answers: q.answers
+			answers: q.answers,
+			votes: Array.apply(null, Array(q.answers.length)).map(Number.prototype.valueOf,0),
+			totalVotes: 0
 		});
 		
 		Poll.save((err, poll) => {
@@ -72,14 +75,18 @@ function PollHandler () {
 	};
 
 	this.removePoll = function (req, res) {
-		Users
-			.findOneAndUpdate({ 'github.id': req.user.github.id }, { 'nbrClicks.clicks': 0 })
-			.exec(function (err, result) {
-					if (err) { throw err; }
+		if( !req.user ) {
+			res.json({error: "User not logged in."});
+			return;
+		}
+		
+		let q = JSON.parse( req.query.json );
 
-					res.json(result.nbrClicks);
-				}
-			);
+		Polls
+			.findById(q.id).remove().exec(function(err, result) {
+				if( err ) res.json({ error: err });
+				else res.json(result);
+			});
 	};
 
 }

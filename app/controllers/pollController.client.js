@@ -18,7 +18,7 @@
 
       ajaxFunctions.ajaxRequest('POST', apiUrl, function () {
          ajaxFunctions.ajaxRequest('GET', apiUrl, function(req, res) {
-            console.log("pollController: ", req, res);
+            console.log("pollController 1: ", req, res);
          });
       }, {
          title: "Intrigante Frage ...",
@@ -32,9 +32,10 @@
 
    deleteButton.addEventListener('click', function () {
 
-      ajaxFunctions.ajaxRequest('DELETE', apiUrl, function () {
+      ajaxFunctions.ajaxRequest('DELETE', apiUrl, function (req, res) {
+         console.log("pollController 2: ", req, res);
          ajaxFunctions.ajaxRequest('GET', apiUrl, updateClickCount);
-      });
+      }, {id : "593147b2b3330e0dd122258b"}); // That's an mongo db id
 
    }, false);
 

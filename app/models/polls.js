@@ -8,7 +8,9 @@ var Poll = new Schema({
 	date: String,
 	title: String,
 	question: String,
-	answers: Array()
+	answers: Array(),
+	votes: Array(),
+	totalVotes: Number
 });
 
 module.exports = mongoose.model('Poll', Poll);
