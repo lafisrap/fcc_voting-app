@@ -1,6 +1,7 @@
 'use strict';
 
 var appUrl = window.location.origin;
+
 var ajaxFunctions = {
    ready: function ready (fn) {
       if (typeof fn !== 'function') {
@@ -13,7 +14,7 @@ var ajaxFunctions = {
 
       document.addEventListener('DOMContentLoaded', fn, false);
    },
-   ajaxRequest: function ajaxRequest (method, url, callback) {
+   ajaxRequest: function ajaxRequest (method, url, callback, postParams) {
       var xmlhttp = new XMLHttpRequest();
 
       xmlhttp.onreadystatechange = function () {
@@ -22,7 +23,8 @@ var ajaxFunctions = {
          }
       };
 
-      xmlhttp.open(method, url, true);
+      let p = "json="+encodeURIComponent(JSON.stringify(postParams));
+      xmlhttp.open(method, url+"?"+p, true);
       xmlhttp.send();
    }
 };
