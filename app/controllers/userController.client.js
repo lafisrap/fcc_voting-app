@@ -9,7 +9,7 @@
    var apiUrl = appUrl + '/api/:id';
 
    function updateHtmlElement (data, element, userProperty) {
-      element.innerHTML = data[userProperty];
+      //element.innerHTML = data[userProperty];
    }
 
    ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', apiUrl, function (data) {
