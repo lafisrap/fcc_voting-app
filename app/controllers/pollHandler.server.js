@@ -83,11 +83,63 @@ function PollHandler () {
 		let q = JSON.parse( req.query.json );
 
 		Polls
-			.findById(q.id).remove().exec(function(err, result) {
+			.findById(q.id).remove().exec( (err, result) => {
 				if( err ) res.json({ error: err });
 				else res.json(result);
 			});
 	};
+	
+	this.addVote = function (req, res ) {
+
+		let q = JSON.parse( req.query.json );
+		
+		Polls
+			.findById(q.id).exec(function(err, poll) {
+				if( err ) res.json({ error: err });
+				else {
+					//console.log("addVote: ", poll, q);
+					if( q.ownAnswer ) {
+						poll.answers.push( q.ownAnswer );
+						poll.votes.push( 1 );
+						
+						Polls.update( { 
+							_id: q.id 
+						}, {
+							"$set" : { 
+								answers: poll.answers,
+								votes: poll.votes
+							}
+						}, {
+							upsert: true
+						}, (err, poll) => {
+							if( err ) console.error(err);
+						} );
+					} else {
+						if( q.answer < 0 || q.answer > poll.votes.length ) {
+							res.json({error: "Invalid vote."});	
+							return;
+						}
+						
+						poll.votes[q.answer]++;
+						
+						Polls.update( {
+							_id: q.id
+						}, {
+							"$set" : { 
+								votes: poll.votes
+							}
+						}, {
+							upsert: true
+						}, (err, poll) => {
+							if( err ) console.error(err);
+						});
+					}
+
+					res.json(poll);
+				}
+			});
+		
+	}
 
 }
 
