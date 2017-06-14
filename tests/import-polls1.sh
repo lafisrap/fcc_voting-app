@@ -1,0 +1,1 @@
+mongoimport --jsonArray --db clementinejs --collection polls --file polls_test1.json

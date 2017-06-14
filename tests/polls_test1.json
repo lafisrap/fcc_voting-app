@@ -1,0 +1,38 @@
+[{
+		"userid": "3194815",
+		"date": "1496401336685",
+		"title": "Donald Trump 1",
+		"question": "What is your opinion about Donald Trump?",
+		"totalVotes": 7,
+		"votes": [1, 5, 1, 0],
+		"answers": ["Good", "Bad", "Dangerous", "Lovable"]
+	},
+	{
+		"userid": "3194815",
+		"date": "1496401336685",
+		"title": "Heute!",
+		"question": "wie ist das Wetter?",
+		"totalVotes": 7,
+		"votes": [1, 1, 5],
+		"answers": ["GUT!", "Mittel", "Schleckt."]
+	},
+	{
+		"userid": "3194815",
+		"date": "1496401336685",
+		"title": "Was war?",
+		"question": "Wieso ist die Türe offen?",
+		"totalVotes": 15,
+		"votes": [0, 15, 0, 0],
+		"answers": ["Weiß nicht", "Darum.", "Hmmm.", "Wegen ..."]
+	},
+	{
+		"userid": "3194815",
+		"date": "1496403383503",
+		"title": "Intrigante Frage ...",
+		"question": "wer ist besser?",
+		"totalVotes": 6,
+		"votes": [0, 3, 0, 1, 1, 1],
+		"answers": ["Ich!", "Du", "Er, sie es", "Weiß nicht!", "Vielleicht ich!", "Vielleicht ich!!"],
+		"__v": 0
+	}
+]
