@@ -63,13 +63,28 @@
    }
    
    function showAnswers(answers) {
-      return answers.map((answer, i) => {
+      
+      let html = answers.map((answer, i) => {
          return `
             <div class="radio radio${i}">
                <label><input type="radio" name="optradio" i="${i}">${answer}</label>
             </div>               
          `;
       }).join("");
+      
+      html += `
+            <div class="radio radio${answers.length}">
+               <label><input type="radio" name="optradio" i="${answers.length}">
+                  <input class="own-answer" type="text" size="30" name="ownAnswer" />
+               </label>
+            </div>               
+      `;
+      
+      return html;
+   }
+   
+   function selectRadio() {
+      $(this).parent().find('input[type="radio"]').prop("checked", "true");
    }
 
    function activateButtons() {
@@ -80,18 +95,20 @@
          let self=$(this),
             radio = self.parent().find("input[type='radio']:checked"),
             id = self.attr("vote-id"),
+            answers = self.parent().find("input[type='radio']").length,
             answer = radio.length && radio.attr("i") || null,
-            ownAnswer = undefined;
+            ownAnswer = answers-1==answer? self.parent().find("input[type='text']").val():undefined;
    
-         console.log("voteButton;", radio, id, answer);
+         console.log("voteButton;", radio, id, answer, answers, ownAnswer);
          
          if( answer ) {
             ajaxFunctions.ajaxRequest('POST', voteUrl, function (req, res) {
                console.log("pollController 3b: ", req, res);
             }, {id, answer, ownAnswer});
          }
-   
       });
+
+      $( ".own-answer ").on("focus", selectRadio );   
    }
 
 
