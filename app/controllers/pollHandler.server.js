@@ -10,11 +10,9 @@ function PollHandler () {
 		let userid = req.user && req.user.github && req.user.github.id || null,
 			latestPolls, activePolls, userPolls;
 			
-			console.log(userid);
-
 		// OTS/Question: How better?
 		Polls
-			.aggregate({ $sort: { date: 1 }}, { $limit: 100 })
+			.aggregate({ $sort: { date: -1 }}, { $limit: 100 })
 			.exec(function (err, result) {
 				if( err ) res.json({"error": err});
 				else {

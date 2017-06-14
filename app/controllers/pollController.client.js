@@ -2,10 +2,6 @@
 
 (function () {
 
-   var voteButton = document.querySelector('.btn-vote');
-   var deleteButton = document.querySelector('.btn-delete');
-   var clickNbr = document.querySelector('#click-nbr');
-   var clickTmp = document.querySelector('#clickimg');
    var pollsUrl = appUrl + '/api/:id/polls';
    var voteUrl = appUrl + '/api/:id/vote';
    
@@ -23,7 +19,7 @@
       if( polls.userPolls && $("#user-polls").length ) {
          showPolls("user-polls", polls.userPolls);
 
-         document.pollClientNewPoll = localStorage.pollClientNewPoll && JSON.parse(localStorage.pollClientNewPoll) || {
+         document.pollClientNewPoll = {
             title: "",
             question: "",
             answers: [],
@@ -31,7 +27,6 @@
          
          showNewPoll( html => $( "#new-poll" ).html(html) );
       }
-      
       
       activateButtons();
    }
@@ -78,20 +73,42 @@
    function showNewPoll( refresh ) {
       let poll = document.pollClientNewPoll;
       
-      document.pollClientAddAnswer = function() {
-         let answer = $("#new-answer").val();
+      document.pollClientAddAnswer = function(id) {
+         let answer = $("#"+id).val();
          
          if( answer.length > 0 ) {
             poll.answers.push(answer);
-            localStorage.pollClientNewPoll = JSON.stringify(poll);
             refresh(makeNewPoll());
          }
       }; 
       
       document.pollClientRemoveAnswer = function(i) {
          poll.answers.splice(i,1);
-         localStorage.pollClientNewPoll = JSON.stringify(poll);
          refresh(makeNewPoll());
+      };
+
+      document.pollClientDSetTitle = function(id) {
+         poll.title = $("#"+id).val();
+      };
+         
+      document.pollClientSetQuestion = function(id) {
+         poll.question = $("#"+id).val();
+      };
+         
+      document.pollClientAddPoll = function() {
+         if( poll.title.length && poll.question.length && poll.answers.length ) {
+            ajaxFunctions.ajaxRequest('POST', pollsUrl, function () {
+               ajaxFunctions.ajaxRequest('GET', pollsUrl, function(req, res) {
+                  console.log("pollController 1: ", req, res);
+                  
+                  poll.title = "";
+                  poll.question = "";
+                  poll.answers = [];
+
+                  refresh(makeNewPoll());
+               });
+            }, poll );
+         }
       };
          
       refresh(makeNewPoll());
@@ -104,17 +121,33 @@
          <div id="panel-new-poll" class="panel panel-default">
             <div class="panel-heading">
                <h4 class="panel-title">
-                  <input class="poll-title" type="text" size="40" name="title" value="${poll.title}" placeholder="Give me a title ..." />
+                  <input 
+                     id="new-poll-title"
+                     type="text"
+                     size="50"
+                     name="title"
+                     value="${poll.title}"
+                     placeholder="Give me a title ..."
+                     onchange="pollClientDSetTitle('new-poll-title')"
+                  />
                </h4>
             </div>
             <div class="panel-body">
                <div class="row">
                   <div class="poll-selection col col-sm-6">
-                     <input class="poll-question" type="text" size="40" name="title" value="${poll.question}" placeholder="And a question ..." />
+                     <input
+                        id="new-poll-question"
+                        type="text"
+                        size="50"
+                        name="title"
+                        value="${poll.question}"
+                        placeholder="And a question ..."
+                        onchange="pollClientSetQuestion('new-poll-question')"
+                     />
                      <div class="answers">${showAnswers(poll.answers, true)}</div>
-                      <input id="new-answer" type="text" size="30" name="newAnswer" placeholder="Type an answer ..." />
-                     <div class="btn btn-primary btn-add-answer" onclick="pollClientAddAnswer()">New Answer</div>
-                     <div class="btn btn-default btn-add-poll">Create</div>
+                      <input id="new-answer" type="text" size="50" name="newAnswer" placeholder="Type an answer ..." />
+                     <div class="btn btn-primary btn-add-answer" onclick="pollClientAddAnswer('new-answer')">Add</div>
+                     <div class="btn btn-success btn-block btn-add-poll" onclick="pollClientAddPoll()">Create Poll</div>
                   </div>
                   <div class="poll-selection col col-sm-6">
                      ${ showDiagram() }
@@ -131,14 +164,14 @@
    
    function showAnswers(answers, edit, removeAnswer) {
       
-      let html = answers.map((answer, i) => {
+      let html = answers.length && answers.map((answer, i) => {
          return `
             <div class="radio radio${i}">
                <label><input type="radio" name="optradio" i="${i}">${answer}</label>
                ${ edit? '<div class="btn btn-default btn-remove-answer" onclick="pollClientRemoveAnswer('+i+')">Remove</div>' : "" }
             </div>               
          `;
-      }).join("");
+      }).join("") || "<div>No answers yet ...</div>";
       
       if( !edit ) {
          html += `
@@ -169,8 +202,6 @@
             answer = radio.length && radio.attr("i") || null,
             ownAnswer = answers-1==answer? self.parent().find("input[type='text']").val():undefined;
    
-         console.log("voteButton;", radio, id, answer, answers, ownAnswer);
-         
          if( answer ) {
             ajaxFunctions.ajaxRequest('POST', voteUrl, function (req, res) {
                console.log("pollController Vote received: ", req, res);
@@ -178,29 +209,12 @@
          }
       });
 
-      $( ".own-answer ").on("focus", selectRadio );   
+      $( ".own-answer ").on("focus", selectRadio );
    }
-
-
+      
    ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', pollsUrl, updatePolls));
 
 /*
-   addButton.addEventListener('click', function () {
-
-      ajaxFunctions.ajaxRequest('POST', apiUrl, function () {
-         ajaxFunctions.ajaxRequest('GET', apiUrl, function(req, res) {
-            console.log("pollController 1: ", req, res);
-         });
-      }, {
-         title: "Intrigante Frage ...",
-         question: "wer ist besser?",
-         answers: [
-            "Ich!", "Du", "Er, sie es"
-         ]
-      });
-
-   }, false);
-
    deleteButton.addEventListener('click', function () {
 
       ajaxFunctions.ajaxRequest('DELETE', apiUrl, function (req, res) {
