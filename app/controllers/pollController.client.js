@@ -16,6 +16,15 @@
          showPolls("latest-polls", polls.latestPolls);
       }
       
+      console.log(polls);
+      if( polls.activePolls && $("#active-polls").length ) {
+         showPolls("active-polls", polls.activePolls);
+      }
+
+      if( polls.userPolls && $("#user-polls").length ) {
+         showPolls("user-polls", polls.userPolls);
+      }
+      
       activateButtons();
    }
 
@@ -103,7 +112,7 @@
          
          if( answer ) {
             ajaxFunctions.ajaxRequest('POST', voteUrl, function (req, res) {
-               console.log("pollController 3b: ", req, res);
+               console.log("pollController Vote received: ", req, res);
             }, {id, answer, ownAnswer});
          }
       });

@@ -24,7 +24,6 @@ var ajaxFunctions = {
       };
 
       let p = "json="+encodeURIComponent(JSON.stringify(params));
-            console.log("Send! ", appUrl, p, params);
 
       xmlhttp.open(method, url+"?"+p, true);
       xmlhttp.send();

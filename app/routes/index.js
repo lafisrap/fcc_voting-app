@@ -16,8 +16,12 @@ module.exports = function (app, passport) {
 	var pollHandler = new PollHandler();
 
 	app.route('/')
-		.get(isLoggedIn, function (req, res) {
-			res.sendFile(path + '/public/index.html');
+		.get(function (req, res) {
+			if( req.isAuthenticated() ) {
+				res.sendFile(path + '/public/index-loggedin.html');
+			} else {
+				res.sendFile(path + '/public/index.html');
+			}
 		});
 
 	app.route('/login')
@@ -28,7 +32,7 @@ module.exports = function (app, passport) {
 	app.route('/logout')
 		.get(function (req, res) {
 			req.logout();
-			res.redirect('/login');
+			res.redirect('/');
 		});
 
 	app.route('/profile')
@@ -37,8 +41,12 @@ module.exports = function (app, passport) {
 		});
 
 	app.route('/api/:id')
-		.get(isLoggedIn, function (req, res) {
-			res.json(req.user.github);
+		.get(function (req, res) {
+			if( req.isAuthenticated() ) {
+				res.json(req.user.github);
+			} else {
+				res.json({});
+			}
 		});
 
 	app.route('/auth/github')
