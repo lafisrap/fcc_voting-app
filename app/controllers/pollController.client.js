@@ -16,14 +16,22 @@
          showPolls("latest-polls", polls.latestPolls);
       }
       
-      console.log(polls);
       if( polls.activePolls && $("#active-polls").length ) {
          showPolls("active-polls", polls.activePolls);
       }
 
       if( polls.userPolls && $("#user-polls").length ) {
          showPolls("user-polls", polls.userPolls);
+
+         document.pollClientNewPoll = localStorage.pollClientNewPoll && JSON.parse(localStorage.pollClientNewPoll) || {
+            title: "",
+            question: "",
+            answers: [],
+         };
+         
+         showNewPoll( html => $( "#new-poll" ).html(html) );
       }
+      
       
       activateButtons();
    }
@@ -66,28 +74,81 @@
          </div>
       `      
    }
+
+   function showNewPoll( refresh ) {
+      let poll = document.pollClientNewPoll;
+      
+      document.pollClientAddAnswer = function() {
+         let answer = $("#new-answer").val();
+         
+         if( answer.length > 0 ) {
+            poll.answers.push(answer);
+            localStorage.pollClientNewPoll = JSON.stringify(poll);
+            refresh(makeNewPoll());
+         }
+      }; 
+      
+      document.pollClientRemoveAnswer = function(i) {
+         poll.answers.splice(i,1);
+         localStorage.pollClientNewPoll = JSON.stringify(poll);
+         refresh(makeNewPoll());
+      };
+         
+      refresh(makeNewPoll());
+   }
+   
+   function makeNewPoll() {
+      let poll = document.pollClientNewPoll;
+      
+      return `
+         <div id="panel-new-poll" class="panel panel-default">
+            <div class="panel-heading">
+               <h4 class="panel-title">
+                  <input class="poll-title" type="text" size="40" name="title" value="${poll.title}" placeholder="Give me a title ..." />
+               </h4>
+            </div>
+            <div class="panel-body">
+               <div class="row">
+                  <div class="poll-selection col col-sm-6">
+                     <input class="poll-question" type="text" size="40" name="title" value="${poll.question}" placeholder="And a question ..." />
+                     <div class="answers">${showAnswers(poll.answers, true)}</div>
+                      <input id="new-answer" type="text" size="30" name="newAnswer" placeholder="Type an answer ..." />
+                     <div class="btn btn-primary btn-add-answer" onclick="pollClientAddAnswer()">New Answer</div>
+                     <div class="btn btn-default btn-add-poll">Create</div>
+                  </div>
+                  <div class="poll-selection col col-sm-6">
+                     ${ showDiagram() }
+                  </div>
+               </div>
+            </div>
+         </div>
+      `
+   }
    
    function showDiagram( ) {
       return `<div>Diagram</div>`;
    }
    
-   function showAnswers(answers) {
+   function showAnswers(answers, edit, removeAnswer) {
       
       let html = answers.map((answer, i) => {
          return `
             <div class="radio radio${i}">
                <label><input type="radio" name="optradio" i="${i}">${answer}</label>
+               ${ edit? '<div class="btn btn-default btn-remove-answer" onclick="pollClientRemoveAnswer('+i+')">Remove</div>' : "" }
             </div>               
          `;
       }).join("");
       
-      html += `
-            <div class="radio radio${answers.length}">
-               <label><input type="radio" name="optradio" i="${answers.length}">
-                  <input class="own-answer" type="text" size="30" name="ownAnswer" />
-               </label>
-            </div>               
-      `;
+      if( !edit ) {
+         html += `
+               <div class="radio radio${answers.length}">
+                  <label><input type="radio" name="optradio" i="${answers.length}">
+                     <input class="own-answer" type="text" size="30" name="ownAnswer" />
+                  </label>
+               </div>               
+         `;
+      }
       
       return html;
    }
