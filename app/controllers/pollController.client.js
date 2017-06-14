@@ -44,7 +44,7 @@
    
    function showPoll( poll, i, ref ) {
       return `
-         <div id="panel-${i}" class="panel panel-default">
+         <div id="panel-${ref}-${i}" class="panel panel-default panel-poll">
             <div class="panel-heading">
                <h4 class="panel-title">
                   <a data-toggle="collapse" data-parent="#${ref}-accordion" href="#${ref}-collapse${i}">
@@ -52,22 +52,33 @@
                </h4>
             </div>
             <div id="${ref}-collapse${i}" class="panel-collapse collapse${i===0?' in':''}">
-               <div class="panel-body">
-                  <div class="row">
-                     <div class="poll-selection col col-sm-6">
-                        <div class="question">${poll.question}</div>
-                        <div class="answers">${showAnswers(poll.answers)}</div>
-                        <div class="btn btn-primary btn-vote" vote-id="${poll._id}">Vote</div>
-                        <div class="btn btn-default btn-tweet">Tweet</div>
-                     </div>
-                     <div class="poll-selection col col-sm-6">
-                        ${ showDiagram() }
-                     </div>
-                  </div>
+               <div class="panel-body-${poll._id} panel-body">
+                  ${ makePoll( poll ) }
                </div>
             </div>
          </div>
       `      
+   }
+   
+   function makePoll( poll ) {
+      return `
+         <div class="row">
+            <div class="poll-selection col col-sm-6">
+               <div class="question">${poll.question}</div>
+               <div class="answers">${showAnswers(poll.answers)}</div>
+               <div
+                  class="btn btn-primary btn-vote"
+                  poll-id='${poll._id}'
+               >
+                  Vote
+               </div>
+               <div class="btn btn-default btn-tweet">Tweet</div>
+            </div>
+            <div class="poll-selection col col-sm-6">
+               ${ showDiagram( poll ) }
+            </div>
+         </div>
+      `;
    }
 
    function showNewPoll( refresh ) {
@@ -104,8 +115,10 @@
                   poll.title = "";
                   poll.question = "";
                   poll.answers = [];
+                  
+                  // BootstrapDialog.alert('Your poll was added!');
 
-                  refresh(makeNewPoll());
+                  location.reload();
                });
             }, poll );
          }
@@ -150,7 +163,7 @@
                      <div class="btn btn-success btn-block btn-add-poll" onclick="pollClientAddPoll()">Create Poll</div>
                   </div>
                   <div class="poll-selection col col-sm-6">
-                     ${ showDiagram() }
+                     ${ showDiagram( poll ) }
                   </div>
                </div>
             </div>
@@ -158,8 +171,8 @@
       `
    }
    
-   function showDiagram( ) {
-      return `<div>Diagram</div>`;
+   function showDiagram( poll ) {
+      return `<div>totalVotes: ${poll.totalVotes}</div>`;
    }
    
    function showAnswers(answers, edit, removeAnswer) {
@@ -197,14 +210,24 @@
          
          let self=$(this),
             radio = self.parent().find("input[type='radio']:checked"),
-            id = self.attr("vote-id"),
+            id = self.attr("poll-id"),
             answers = self.parent().find("input[type='radio']").length,
             answer = radio.length && radio.attr("i") || null,
             ownAnswer = answers-1==answer? self.parent().find("input[type='text']").val():undefined;
    
          if( answer ) {
+            console.log("1", id, answer, ownAnswer);
             ajaxFunctions.ajaxRequest('POST', voteUrl, function (req, res) {
+               if( req.error ) {
+                  console.error( req.error );
+                  return;
+               } 
                console.log("pollController Vote received: ", req, res);
+
+               let poll = JSON.parse(req),
+                   html = makePoll(poll);
+                   
+               $(".panel-body-" + poll._id ).html(html);
             }, {id, answer, ownAnswer});
          }
       });
