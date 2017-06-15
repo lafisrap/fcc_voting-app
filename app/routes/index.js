@@ -64,5 +64,5 @@ module.exports = function (app, passport) {
 		.delete(isLoggedIn, pollHandler.removePoll);
 
 	app.route('/api/:id/vote')
-		.post(isLoggedIn, pollHandler.addVote);
+		.post(pollHandler.addVote);
 };

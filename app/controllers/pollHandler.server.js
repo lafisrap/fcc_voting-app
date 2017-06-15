@@ -82,6 +82,8 @@ function PollHandler () {
 		
 		let q = JSON.parse( req.query.json );
 
+		console.log("DELETE", req.user);
+
 		Polls
 			.findById(q.id).remove().exec( (err, result) => {
 				if( err ) res.json({ error: err });

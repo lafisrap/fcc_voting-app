@@ -4,6 +4,8 @@
 
    var pollsUrl = appUrl + '/api/:id/polls';
    var voteUrl = appUrl + '/api/:id/vote';
+
+   document.pollClientPollsVoted = localStorage.pollClientPollsVoted && JSON.parse(localStorage.pollClientPollsVoted) || [];
    
    function updatePolls (data) {
       var polls = JSON.parse(data);
@@ -32,8 +34,6 @@
    }
 
    function showPolls( ref, polls ) {
-      console.log(ref, polls);
-      
       var html = `
          <div class="panel-group" id="${ref}-accordion">
          ${ polls.map((poll, i) => showPoll(poll, i, ref)).join("") }
@@ -53,26 +53,36 @@
             </div>
             <div id="${ref}-collapse${i}" class="panel-collapse collapse${i===0?' in':''}">
                <div class="panel-body-${poll._id} panel-body">
-                  ${ makePoll( poll ) }
+                  ${ makePoll( poll, ref ) }
                </div>
             </div>
          </div>
       `      
    }
    
-   function makePoll( poll ) {
+   function makePoll( poll, ref ) {
+      
+      let voted = document.pollClientPollsVoted,
+          vote = voted.filter(p => poll._id === p.id)[0],
+          buttons = vote? `
+               <span>You voted!</span>
+               <div class="btn btn-default btn-tweet">Tweet</div>
+          ` : `
+               <div class="btn btn-primary btn-vote" poll-id='${poll._id}'>Vote</div>
+          `;
+          
+          if( ref === "user-polls" ) {
+            buttons += `
+               <div class="btn btn-danger btn-delete" poll-id='${poll._id}'>Delete Poll</div>
+            `;
+          }
+      
       return `
          <div class="row">
             <div class="poll-selection col col-sm-6">
                <div class="question">${poll.question}</div>
-               <div class="answers">${showAnswers(poll.answers)}</div>
-               <div
-                  class="btn btn-primary btn-vote"
-                  poll-id='${poll._id}'
-               >
-                  Vote
-               </div>
-               <div class="btn btn-default btn-tweet">Tweet</div>
+               <div class="answers">${showAnswers(poll.answers, false, vote)}</div>
+               ${buttons}
             </div>
             <div class="poll-selection col col-sm-6">
                ${ showDiagram( poll ) }
@@ -110,14 +120,12 @@
          if( poll.title.length && poll.question.length && poll.answers.length ) {
             ajaxFunctions.ajaxRequest('POST', pollsUrl, function () {
                ajaxFunctions.ajaxRequest('GET', pollsUrl, function(req, res) {
-                  console.log("pollController 1: ", req, res);
+                  console.log("Poll added: ", req, res);
                   
                   poll.title = "";
                   poll.question = "";
                   poll.answers = [];
                   
-                  // BootstrapDialog.alert('Your poll was added!');
-
                   location.reload();
                });
             }, poll );
@@ -158,7 +166,7 @@
                         onchange="pollClientSetQuestion('new-poll-question')"
                      />
                      <div class="answers">${showAnswers(poll.answers, true)}</div>
-                      <input id="new-answer" type="text" size="50" name="newAnswer" placeholder="Type an answer ..." />
+                     <input id="new-answer" type="text" size="50" name="newAnswer" placeholder="Type an answer ..." />
                      <div class="btn btn-primary btn-add-answer" onclick="pollClientAddAnswer('new-answer')">Add</div>
                      <div class="btn btn-success btn-block btn-add-poll" onclick="pollClientAddPoll()">Create Poll</div>
                   </div>
@@ -175,18 +183,25 @@
       return `<div>totalVotes: ${poll.totalVotes}</div>`;
    }
    
-   function showAnswers(answers, edit, removeAnswer) {
+   function showAnswers(answers, edit, vote) {
       
       let html = answers.length && answers.map((answer, i) => {
+
+         let radio = vote? `
+            <label><input type="radio" disabled="true"${vote.answer == i? ' checked="checked"': ''} i="${i}">${answer}</label>
+         ` : `
+            <label><input type="radio" i="${i}">${answer}</label>
+         `;
+
          return `
             <div class="radio radio${i}">
-               <label><input type="radio" name="optradio" i="${i}">${answer}</label>
+               ${ radio }
                ${ edit? '<div class="btn btn-default btn-remove-answer" onclick="pollClientRemoveAnswer('+i+')">Remove</div>' : "" }
             </div>               
          `;
       }).join("") || "<div>No answers yet ...</div>";
       
-      if( !edit ) {
+      if( !edit && !vote ) {
          html += `
                <div class="radio radio${answers.length}">
                   <label><input type="radio" name="optradio" i="${answers.length}">
@@ -216,13 +231,14 @@
             ownAnswer = answers-1==answer? self.parent().find("input[type='text']").val():undefined;
    
          if( answer ) {
-            console.log("1", id, answer, ownAnswer);
             ajaxFunctions.ajaxRequest('POST', voteUrl, function (req, res) {
                if( req.error ) {
                   console.error( req.error );
                   return;
                } 
-               console.log("pollController Vote received: ", req, res);
+
+               document.pollClientPollsVoted.push({id,answer});
+               localStorage.pollClientPollsVoted = JSON.stringify(document.pollClientPollsVoted);
 
                let poll = JSON.parse(req),
                    html = makePoll(poll);
@@ -231,22 +247,43 @@
             }, {id, answer, ownAnswer});
          }
       });
+         
+         // For Deleting
+      $( ".btn-delete" ).on('click', function () {
 
+         let id = $(this).attr("poll-id");
+
+         BootstrapDialog.show({
+            title: 'Delete Poll',
+            message: 'Do you want to delete the poll?',
+            buttons: [{
+                  label: 'Cancel',
+                  action: function(dialog) {
+                        dialog.close();
+                  }
+            }, {
+                  label: 'OK',
+                  action: function(dialog) {
+                     
+                     ajaxFunctions.ajaxRequest('DELETE', pollsUrl, function (req, res) {
+                        console.log("Poll deleted: ", req, res);
+                        
+                        dialog.close();
+                        location.reload();
+            
+                     }, { id }); // That's an mongo db id
+                  }
+            }]
+         });
+
+   
+      });
+         
+         
       $( ".own-answer ").on("focus", selectRadio );
    }
       
    ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', pollsUrl, updatePolls));
-
-/*
-   deleteButton.addEventListener('click', function () {
-
-      ajaxFunctions.ajaxRequest('DELETE', apiUrl, function (req, res) {
-         console.log("pollController 2: ", req, res);
-         ajaxFunctions.ajaxRequest('GET', apiUrl, updateClickCount);
-      }, {id : "593147b2b3330e0dd122258b"}); // That's an mongo db id
-
-   }, false);
-*/
 
 
 
