@@ -15,7 +15,6 @@
    ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', apiUrl, function (data) {
       var userObject = JSON.parse(data);
 
-      console.log(JSON.stringify(userObject));
       if ( userObject.displayName ) {
          updateHtmlElement(userObject, displayName, 'displayName');
       } else if( userObject.username ) {

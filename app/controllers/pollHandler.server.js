@@ -22,21 +22,24 @@ function PollHandler () {
 						.aggregate({ $sort: { totalVotes: -1 }}, { $limit: 100 })
 						.exec(function (err, result) {
 							if( err ) res.json({"error": err});
-							else  if( userid ) {
+							else  {
 								activePolls = result;
 								
-								Polls
-									.aggregate({ $match: { userid }}, { $sort: { date: -1 }}, { $limit: 100 })
-									.exec(function (err, result) {
-										userPolls = result;
-											
-										if( err ) res.json({"error": err});
-										else {
-											res.json({latestPolls, activePolls, userPolls});
-										}
-									});
-							} else {
-								res.json({latestPolls, activePolls});
+								if( userid ) {
+								
+									Polls
+										.aggregate({ $match: { userid }}, { $sort: { date: -1 }}, { $limit: 100 })
+										.exec(function (err, result) {
+											userPolls = result;
+												
+											if( err ) res.json({"error": err});
+											else {
+												res.json({latestPolls, activePolls, userPolls});
+											}
+										});
+								} else {
+									res.json({latestPolls, activePolls});
+								}
 							}
 						});
 				}

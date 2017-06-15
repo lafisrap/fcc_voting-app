@@ -14,6 +14,7 @@
          showPolls("latest-polls", polls.latestPolls);
       }
       
+      console.log(polls.activePolls);
       if( polls.activePolls && $("#active-polls").length ) {
          showPolls("active-polls", polls.activePolls);
       }
@@ -66,7 +67,7 @@
           vote = voted.filter(p => poll._id === p.id)[0],
           buttons = vote? `
                <span>You voted!</span>
-               <div class="btn btn-default btn-tweet">Tweet</div>
+               <div class="btn btn-tweet btn-default"><img src="/public/img/twitter_32px.png" class="img img-responsive" /> Tweet it </div>
           ` : `
                <div class="btn btn-primary btn-vote" poll-id='${poll._id}'>Vote</div>
           `;
@@ -84,7 +85,7 @@
                <div class="answers">${showAnswers(poll.answers, false, vote)}</div>
                ${buttons}
             </div>
-            <div class="poll-selection col col-sm-6">
+            <div class="poll-diagram col col-sm-6">
                ${ showDiagram( poll ) }
             </div>
          </div>
@@ -97,9 +98,11 @@
       document.pollClientAddAnswer = function(id) {
          let answer = $("#"+id).val();
          
-         if( answer.length > 0 ) {
+         if( answer.length > 0 && poll.answers.indexOf(answer) === -1 ) {
             poll.answers.push(answer);
             refresh(makeNewPoll());
+         } else {
+            BootstrapDialog.alert("That's either a duplicate or no answer a all.");
          }
       }; 
       
@@ -108,7 +111,7 @@
          refresh(makeNewPoll());
       };
 
-      document.pollClientDSetTitle = function(id) {
+      document.pollClientSetTitle = function(id) {
          poll.title = $("#"+id).val();
       };
          
@@ -129,6 +132,8 @@
                   location.reload();
                });
             }, poll );
+         } else {
+            BootstrapDialog.alert("We need a title, a question and at least one answer (two might be better).");
          }
       };
          
@@ -149,7 +154,7 @@
                      name="title"
                      value="${poll.title}"
                      placeholder="Give me a title ..."
-                     onchange="pollClientDSetTitle('new-poll-title')"
+                     onchange="pollClientSetTitle('new-poll-title')"
                   />
                </h4>
             </div>
@@ -189,14 +194,16 @@
 
          let radio = vote? `
             <label><input type="radio" disabled="true"${vote.answer == i? ' checked="checked"': ''} i="${i}">${answer}</label>
+         ` : edit? `
+            <label><span>${answer}</span></label>
          ` : `
-            <label><input type="radio" i="${i}">${answer}</label>
+            <label><input type="radio" i="${i}" /><span>${answer}</span></label>
          `;
 
          return `
             <div class="radio radio${i}">
                ${ radio }
-               ${ edit? '<div class="btn btn-default btn-remove-answer" onclick="pollClientRemoveAnswer('+i+')">Remove</div>' : "" }
+               ${ edit? '<div class="btn btn-warning btn-xs btn-remove-answer" onclick="pollClientRemoveAnswer('+i+')">Remove</div>' : "" }
             </div>               
          `;
       }).join("") || "<div>No answers yet ...</div>";
