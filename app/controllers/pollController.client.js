@@ -2,8 +2,32 @@
 
 (function () {
 
-   var pollsUrl = appUrl + '/api/:id/polls';
-   var voteUrl = appUrl + '/api/:id/vote';
+   const pollsUrl = appUrl + '/api/:id/polls';
+   const voteUrl = appUrl + '/api/:id/vote';
+   const answerColors = [
+      'rgba(255, 99, 132, 0.2)',
+      'rgba(54, 162, 235, 0.2)',
+      'rgba(255, 206, 86, 0.2)',
+      'rgba(75, 192, 192, 0.2)',
+      'rgba(153, 102, 255, 0.2)',
+      'rgba(239, 31, 234, 0.2)',
+      'rgba(136, 84, 84, 0.2)',
+      'rgba(22, 95, 154, 0.2)',
+      'rgba(20, 163, 22, 0.2)',
+      'rgba(255, 159, 64, 0.2)'
+   ];
+   const answerBorders = [
+      'rgba(255, 99, 132, 1)',
+      'rgba(54, 162, 235, 1)',
+      'rgba(255, 206, 86, 1)',
+      'rgba(75, 192, 192, 1)',
+      'rgba(153, 102, 255, 1)',
+      'rgba(239, 31, 234, 1)',
+      'rgba(136, 84, 84, 1)',
+      'rgba(22, 95, 154, 1)',
+      'rgba(20, 163, 22, 1)',
+      'rgba(255, 159, 64, 1)'
+   ]
 
    document.pollClientPollsVoted = localStorage.pollClientPollsVoted && JSON.parse(localStorage.pollClientPollsVoted) || [];
    
@@ -14,7 +38,6 @@
          showPolls("latest-polls", polls.latestPolls);
       }
       
-      console.log(polls.activePolls);
       if( polls.activePolls && $("#active-polls").length ) {
          showPolls("active-polls", polls.activePolls);
       }
@@ -41,6 +64,8 @@
          </div>`;
 
       $("#"+ref).html(html);
+      
+      drawCharts(polls, ref);
    }
    
    function showPoll( poll, i, ref ) {
@@ -82,11 +107,11 @@
          <div class="row">
             <div class="poll-selection col col-sm-6">
                <div class="question">${poll.question}</div>
-               <div class="answers">${showAnswers(poll.answers, false, vote)}</div>
+               <div class="answers">${showAnswers(poll, ref, false, vote)}</div>
                ${buttons}
             </div>
             <div class="poll-diagram col col-sm-6">
-               ${ showDiagram( poll ) }
+               <canvas class="poll-chart poll-chart-${poll._id}" width="370" height="270"></canvas>
             </div>
          </div>
       `;
@@ -170,13 +195,10 @@
                         placeholder="And a question ..."
                         onchange="pollClientSetQuestion('new-poll-question')"
                      />
-                     <div class="answers">${showAnswers(poll.answers, true)}</div>
+                     <div class="answers">${showAnswers(poll, "new-poll", true)}</div>
                      <input id="new-answer" type="text" size="50" name="newAnswer" placeholder="Type an answer ..." />
                      <div class="btn btn-primary btn-add-answer" onclick="pollClientAddAnswer('new-answer')">Add</div>
                      <div class="btn btn-success btn-block btn-add-poll" onclick="pollClientAddPoll()">Create Poll</div>
-                  </div>
-                  <div class="poll-selection col col-sm-6">
-                     ${ showDiagram( poll ) }
                   </div>
                </div>
             </div>
@@ -184,20 +206,55 @@
       `
    }
    
-   function showDiagram( poll ) {
-      return `<div>totalVotes: ${poll.totalVotes}</div>`;
+   function drawCharts( polls, ref ) {
+      polls.map(poll => {
+         let elem = $(`#${ref}-accordion .poll-chart-${poll._id}`);
+         
+         if( !elem.length ) return;
+         
+         let ctx = elem[0].getContext('2d');
+
+         console.log(poll);
+         poll.chart = new Chart(ctx, {
+            type: 'horizontalBar',
+            data: {
+               labels: poll.votes.concat(["","","","","","","","","",""]).slice(0,10),
+               datasets: [{
+                  label: '# of Votes',
+                  data: poll.votes,
+                  backgroundColor: answerColors.slice(0, poll.votes.length),
+                  borderColor: answerBorders.slice(0, poll.votes.length),
+                  borderWidth: 1
+               }]
+            },
+            options: {
+               scales: {
+                  xAxes: [{
+                     ticks: {
+                        beginAtZero:true,
+                        callback: function(value, index, values) {
+                           if (Math.floor(value) === value) {
+                              return value;
+                           }
+                        }
+                     }
+                  }]
+               }
+            }
+         });
+      });
    }
    
-   function showAnswers(answers, edit, vote) {
+   function showAnswers(poll, ref, edit, vote) {
       
-      let html = answers.length && answers.map((answer, i) => {
+      let html = poll.answers.length && poll.answers.map((answer, i) => {
 
          let radio = vote? `
-            <label><input type="radio" disabled="true"${vote.answer == i? ' checked="checked"': ''} i="${i}">${answer}</label>
+            <label><input type="radio" name="radio-${ref}-${i}" disabled="true"${vote.answer == i? ' checked="checked"': ''} i="${i}"><span style="color: ${ answerBorders[i] };">${answer}</span></label>
          ` : edit? `
-            <label><span>${answer}</span></label>
+            <label><span style="color: ${ answerBorders[i] };">${answer}</span></label>
          ` : `
-            <label><input type="radio" i="${i}" /><span>${answer}</span></label>
+            <label><input type="radio" name="radio-${ref}-${i}" i="${i}" /><span style="color: ${ answerBorders[i] };">${answer}</span></label>
          `;
 
          return `
@@ -210,8 +267,8 @@
       
       if( !edit && !vote ) {
          html += `
-               <div class="radio radio${answers.length}">
-                  <label><input type="radio" name="optradio" i="${answers.length}">
+               <div class="radio radio${poll.answers.length}">
+                  <label><input type="radio" name="optradio" i="${poll.answers.length}">
                      <input class="own-answer" type="text" size="30" name="ownAnswer" />
                   </label>
                </div>               
@@ -251,6 +308,9 @@
                    html = makePoll(poll);
                    
                $(".panel-body-" + poll._id ).html(html);
+               drawCharts([poll], "latest-polls");
+               drawCharts([poll], "active-polls");
+               drawCharts([poll], "user-polls");
             }, {id, answer, ownAnswer});
          }
       });
