@@ -4,7 +4,8 @@
 
    const pollsUrl = appUrl + '/api/:id/polls';
    const voteUrl = appUrl + '/api/:id/vote';
-   const answerColors = [
+   const MAX_ANSWERS = 10;
+   const ANSWER_COLORS = [
       'rgba(255, 99, 132, 0.2)',
       'rgba(54, 162, 235, 0.2)',
       'rgba(255, 206, 86, 0.2)',
@@ -16,7 +17,7 @@
       'rgba(20, 163, 22, 0.2)',
       'rgba(255, 159, 64, 0.2)'
    ];
-   const answerBorders = [
+   const ANSWER_BORDERS = [
       'rgba(255, 99, 132, 1)',
       'rgba(54, 162, 235, 1)',
       'rgba(255, 206, 86, 1)',
@@ -90,9 +91,15 @@
       
       let voted = document.pollClientPollsVoted,
           vote = voted.filter(p => poll._id === p.id)[0],
+          answers = poll.answers.map((a,i) => a+":"+poll.votes[i]).join(","),
+          tweet= encodeURI((poll.question+": "+answers).slice(0,116)),
           buttons = vote? `
                <span>You voted!</span>
-               <div class="btn btn-tweet btn-default"><img src="/public/img/twitter_32px.png" class="img img-responsive" /> Tweet it </div>
+               <a href="https://twitter.com/intent/tweet?text=${tweet}&url=https://ide.c9.io/lafisrap/voting-server" target="_blank">
+                  <div class="btn btn-tweet btn-default btn-xs">
+                     <img src="/public/img/twitter_32px.png" class="img img-responsive" /> Tweet it
+                  </div>
+               </a>
           ` : `
                <div class="btn btn-primary btn-vote" poll-id='${poll._id}'>Vote</div>
           `;
@@ -123,11 +130,11 @@
       document.pollClientAddAnswer = function(id) {
          let answer = $("#"+id).val();
          
-         if( answer.length > 0 && poll.answers.indexOf(answer) === -1 ) {
+         if( answer.length > 0 && poll.answers.length < MAX_ANSWERS && poll.answers.indexOf(answer) === -1 ) {
             poll.answers.push(answer);
             refresh(makeNewPoll());
          } else {
-            BootstrapDialog.alert("That's either a duplicate or no answer a all.");
+            BootstrapDialog.alert("That's either a duplicate, or too many answers or no answer a all.");
          }
       }; 
       
@@ -214,7 +221,6 @@
          
          let ctx = elem[0].getContext('2d');
 
-         console.log(poll);
          poll.chart = new Chart(ctx, {
             type: 'horizontalBar',
             data: {
@@ -222,8 +228,8 @@
                datasets: [{
                   label: '# of Votes',
                   data: poll.votes,
-                  backgroundColor: answerColors.slice(0, poll.votes.length),
-                  borderColor: answerBorders.slice(0, poll.votes.length),
+                  backgroundColor: ANSWER_COLORS.slice(0, poll.votes.length),
+                  borderColor: ANSWER_BORDERS.slice(0, poll.votes.length),
                   borderWidth: 1
                }]
             },
@@ -250,11 +256,11 @@
       let html = poll.answers.length && poll.answers.map((answer, i) => {
 
          let radio = vote? `
-            <label><input type="radio" name="radio-${ref}-${i}" disabled="true"${vote.answer == i? ' checked="checked"': ''} i="${i}"><span style="color: ${ answerBorders[i] };">${answer}</span></label>
+            <label><input type="radio" disabled="true"${vote.answer == i? ' checked="checked"': ''} i="${i}"><span style="color: ${ ANSWER_BORDERS[i] };">${answer}</span></label>
          ` : edit? `
-            <label><span style="color: ${ answerBorders[i] };">${answer}</span></label>
+            <label><span>${answer}</span></label>
          ` : `
-            <label><input type="radio" name="radio-${ref}-${i}" i="${i}" /><span style="color: ${ answerBorders[i] };">${answer}</span></label>
+            <label><input type="radio" name="radio-${ref}-${poll._id}" i="${i}" /><span style="color: ${ ANSWER_BORDERS[i] };">${answer}</span></label>
          `;
 
          return `
@@ -265,10 +271,10 @@
          `;
       }).join("") || "<div>No answers yet ...</div>";
       
-      if( !edit && !vote ) {
+      if( !edit && !vote && poll.answers.length < MAX_ANSWERS ) {
          html += `
                <div class="radio radio${poll.answers.length}">
-                  <label><input type="radio" name="optradio" i="${poll.answers.length}">
+                  <label><input type="radio" name="radio-${ref}-${poll._id}" i="${poll.answers.length}">
                      <input class="own-answer" type="text" size="30" name="ownAnswer" />
                   </label>
                </div>               
@@ -342,11 +348,8 @@
                   }
             }]
          });
-
-   
       });
-         
-         
+      
       $( ".own-answer ").on("focus", selectRadio );
    }
       
