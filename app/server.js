@@ -8,6 +8,9 @@ var session = require('express-session');
 var bodyParser = require('body-parser');
 	
 var app = express();
+
+app.set('port', (process.env.PORT || 5000));
+
 require('dotenv').load();
 require('./app/config/passport')(passport);
 
@@ -37,7 +40,8 @@ app.use(passport.session());
 
 routes(app, passport);
 
-var port = process.env.PORT || 8080;
+var port = app.get('port');
+
 app.listen(port,  function () {
 	console.log('Node.js listening on port ' + port + '...');
 });
