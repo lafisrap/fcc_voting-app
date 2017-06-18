@@ -12,7 +12,7 @@ var app = express();
 // Set port for Heroku
 app.set('port', (process.env.PORT || 5000));
 
-require('dotenv').load();
+//require('dotenv').load();
 require('./app/config/passport')(passport);
 
 mongoose.connect(process.env.MONGO_URI);
