@@ -21,6 +21,7 @@ body {
 	font-size: 16px;
 	margin: 0;
 	padding: 0;
+	background-image: url(../img/drops.jpg);
 }
 
 header {
@@ -83,7 +84,7 @@ header a ~ p {
 }
 
 #login-btn {
-	width: 225px;
+	width: 180px;
 	padding: 7px 5px;
 }
 
@@ -119,16 +120,15 @@ img {
 	text-align: center;
 }
 
-.btn {	/* Styling for buttons */
+.btn, .btn.dropdown-toggle, .btn {	/* Styling for buttons */
 	margin: 0 8px;
 	color: white;
-	background-color: #00BCD4;
+	background-color: #1da1f2;
 	display: inline-block;
 	border: 0;
 	font-size: 14px;
 	border-radius: 3px;
 	padding: 10px 5px;
-	width: 100px;
 	font-weight: 500;
 }
 
@@ -198,7 +198,90 @@ span {
 }
 
 #menu-divide {
-	color: #FFFFFF;
+	color: #FFFFFF; 
 	display: inline;
 	margin: 0;
 }
+
+
+/****************************************************************/
+/* Custom 
+/****************************************************************/
+
+.container > .panel {
+	margin-top: 50px;
+	border-radius: 20px;
+	overflow: hidden;
+}
+
+.panel-heading h2 {
+	text-align: center;
+	font-weight: bold;
+	font-size: 2.5em;
+	color: #02345f;
+}
+
+.panel-heading h2 .btn {
+	background-color: #041A4D;
+	width: 150px;
+}
+
+.panel-heading h2 .btn:hover {
+	color: rgb(190,200,242);
+}
+
+.tab-pane {
+	text-align: center;
+}
+
+.tab-pane h3 {
+	color: lightgrey;
+}
+
+
+.panel-poll > .panel-heading {
+	background-color: #DFF0D8;
+}
+
+.panel-poll > .panel-heading a {
+	color: #0e5510;
+}
+
+
+.panel-poll {
+	margin: 0px;
+}
+
+#panel-new-poll input, #panel-new-poll .answers {
+	padding: 8px;
+	margin: 8px;
+}
+
+.poll-selection {
+	text-align: left;
+}
+
+.poll-selection .question {
+	background-color:  #0e5510;
+	color: white;
+	padding: 10px;
+	border-radius: 5px;
+}
+
+.btn-vote, .btn-tweet {
+	padding: 3px 20px;
+}
+
+.btn-tweet, .btn-tweet:active {
+	background-color: #1da1f2 !important;
+	color: white !important;
+}
+
+.btn-tweet img {
+	margin: 0;
+}
+
+.btn-vote {
+	font-size: 1.2em;
+}
+

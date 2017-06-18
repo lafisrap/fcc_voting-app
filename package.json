@@ -1,6 +1,6 @@
 {
   "name": "clementinejs-fcc",
-  "version": "1.0.1",
+  "version": "0.0.1",
   "description": "The elegant and lightweight boilerplate for full stack JavaScript.",
   "main": "server.js",
   "repository": {
@@ -15,13 +15,12 @@
     "full stack",
     "Express",
     "Node",
-    "javascript",
-    "boilerplate"
+    "javascript"
   ],
   "scripts": {
     "start": "node server.js"
   },
-  "author": "Blake Johnston",
+  "author": "Michael Schmidt",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.17.2",

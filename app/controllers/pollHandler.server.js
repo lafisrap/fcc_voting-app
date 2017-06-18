@@ -7,36 +7,39 @@ function PollHandler () {
 
 	this.getPolls = function (req, res) {
 		
-		let userid = req.user.github && req.user.github.id || null,
+		let userid = req.user && req.user.github && req.user.github.id || null,
 			latestPolls, activePolls, userPolls;
-
+			
 		// OTS/Question: How better?
 		Polls
-			.aggregate({ $sort: { date: 1 }}, { $limit: 100 })
+			.aggregate({ $sort: { date: -1 }}, { $limit: 100 })
 			.exec(function (err, result) {
 				if( err ) res.json({"error": err});
 				else {
 					latestPolls = result;
 					
 					Polls
-						.aggregate({ $sort: { totalVotes: 1 }}, { $limit: 100 })
+						.aggregate({ $sort: { totalVotes: -1 }}, { $limit: 100 })
 						.exec(function (err, result) {
 							if( err ) res.json({"error": err});
-							else  if( userid ) {
+							else  {
 								activePolls = result;
 								
-								Polls
-									.aggregate({ $match: { userid }}, { $sort: { date: 1 }}, { $limit: 100 })
-									.exec(function (err, result) {
-										userPolls = result;
-											
-										if( err ) res.json({"error": err});
-										else {
-											res.json({latestPolls, activePolls, userPolls});
-										}
-									});
-							} else {
-								res.json({latestPolls, activePolls});
+								if( userid ) {
+								
+									Polls
+										.aggregate({ $match: { userid }}, { $sort: { date: -1 }}, { $limit: 100 })
+										.exec(function (err, result) {
+											userPolls = result;
+												
+											if( err ) res.json({"error": err});
+											else {
+												res.json({latestPolls, activePolls, userPolls});
+											}
+										});
+								} else {
+									res.json({latestPolls, activePolls});
+								}
 							}
 						});
 				}
@@ -82,6 +85,8 @@ function PollHandler () {
 		
 		let q = JSON.parse( req.query.json );
 
+		console.log("DELETE", req.user);
+
 		Polls
 			.findById(q.id).remove().exec( (err, result) => {
 				if( err ) res.json({ error: err });
@@ -97,17 +102,18 @@ function PollHandler () {
 			.findById(q.id).exec(function(err, poll) {
 				if( err ) res.json({ error: err });
 				else {
-					//console.log("addVote: ", poll, q);
 					if( q.ownAnswer ) {
 						poll.answers.push( q.ownAnswer );
 						poll.votes.push( 1 );
+						poll.totalVotes = poll.votes.reduce((a,b) => a + parseInt(b), 0);
 						
 						Polls.update( { 
 							_id: q.id 
 						}, {
 							"$set" : { 
 								answers: poll.answers,
-								votes: poll.votes
+								votes: poll.votes,
+								totalVotes: poll.totalVotes
 							}
 						}, {
 							upsert: true
@@ -121,12 +127,14 @@ function PollHandler () {
 						}
 						
 						poll.votes[q.answer]++;
+						poll.totalVotes = poll.votes.reduce((a,b) => a + parseInt(b), 0);
 						
 						Polls.update( {
 							_id: q.id
 						}, {
 							"$set" : { 
-								votes: poll.votes
+								votes: poll.votes,
+								totalVotes: poll.totalVotes
 							}
 						}, {
 							upsert: true
