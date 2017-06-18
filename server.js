@@ -9,6 +9,7 @@ var bodyParser = require('body-parser');
 	
 var app = express();
 
+// Set port for Heroku
 app.set('port', (process.env.PORT || 5000));
 
 require('dotenv').load();
