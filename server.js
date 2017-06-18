@@ -15,7 +15,7 @@ app.set('port', (process.env.PORT || 5000));
 //require('dotenv').load();
 require('./app/config/passport')(passport);
 
-mongoose.connect(process.env.MONGO_URI);
+mongoose.connect(process.env.MONGODB_URI);
 mongoose.Promise = global.Promise;
 
 var db = mongoose.connection;
