@@ -24,6 +24,16 @@ module.exports = function (app, passport) {
 			}
 		});
 
+	app.route('/single/:id')
+		.get(function (req, res) {
+	    	res.render('single-poll', {
+	    		id: req.params.id,
+	    		title: "TEST",
+	    		text: "Dies ist ein Text ..."
+	    	});
+		});
+
+
 	app.route('/login')
 		.get(function (req, res) {
 			res.sendFile(path + '/public/login.html');
@@ -65,4 +75,7 @@ module.exports = function (app, passport) {
 
 	app.route('/api/:id/vote')
 		.post(pollHandler.addVote);
+		
+	app.route('/api/:id/poll')
+		.get(pollHandler.getSinglePoll)
 };

@@ -3,7 +3,8 @@
 (function () {
 
    const pollsUrl = appUrl + '/api/:id/polls';
-   const voteUrl = appUrl + '/api/:id/vote';
+   const pollUrl = appUrl + '/../api/:id/poll';
+   const voteUrl = appUrl + '/../api/:id/vote';
    const MAX_ANSWERS = 10;
    const ANSWER_COLORS = [
       'rgba(255, 99, 132, 0.2)',
@@ -58,6 +59,18 @@
       activateButtons();
    }
 
+   function updatePoll (data) {
+      var poll = JSON.parse(data);
+      
+      var html = showPoll( poll, 0, "single" );
+
+      $("#poll").html(html);
+      
+      drawCharts([poll], "single-poll");
+      
+      activateButtons();
+   }
+
    function showPolls( ref, polls ) {
       var html = `
          <div class="panel-group" id="${ref}-accordion">
@@ -91,11 +104,11 @@
       
       let voted = document.pollClientPollsVoted,
           vote = voted.filter(p => poll._id === p.id)[0],
-          answers = poll.answers.map((a,i) => a+":"+poll.votes[i]).join(","),
+          answers = poll.answers.map((a,i) => a).join(" / "),
           tweet= encodeURI((poll.question+": "+answers).slice(0,116)),
           buttons = vote? `
                <span>You voted!</span>
-               <a href="https://twitter.com/intent/tweet?text=${tweet}&url=https://ide.c9.io/lafisrap/voting-server" target="_blank">
+               <a href="https://twitter.com/intent/tweet?text=${tweet}&url=https://voting-server-lafisrap.c9users.io/single/${poll._id}" target="_blank">
                   <div class="btn btn-tweet btn-default btn-xs">
                      <img src="/public/img/twitter_32px.png" class="img img-responsive" /> Tweet it
                   </div>
@@ -215,6 +228,7 @@
    
    function drawCharts( polls, ref ) {
       polls.map(poll => {
+         let str = `#${ref}-accordion .poll-chart-${poll._id}`;
          let elem = $(`#${ref}-accordion .poll-chart-${poll._id}`);
          
          if( !elem.length ) return;
@@ -249,6 +263,15 @@
             }
          });
       });
+      
+      let poll = polls[0],
+          title = $("head meta[name='twitter:title']"),
+          text = $("head meta[name='twitter:description']"),
+          image = $("head meta[name='twitter:image']");
+          
+      //title.attr("content", poll.title);
+      //text.attr("content", poll.question);
+      //image.attr("content", $(`#single-poll-accordion .poll-chart-${poll._id}`)[0].toDataURL());
    }
    
    function showAnswers(poll, ref, edit, vote) {
@@ -316,7 +339,8 @@
                $(".panel-body-" + poll._id ).html(html);
                drawCharts([poll], "latest-polls");
                drawCharts([poll], "active-polls");
-               drawCharts([poll], "user-polls");
+               drawCharts([poll], "user-polls"); 
+               drawCharts([poll], "single-poll");
             }, {id, answer, ownAnswer});
          }
       });
@@ -352,10 +376,12 @@
       
       $( ".own-answer ").on("focus", selectRadio );
    }
-      
-   ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', pollsUrl, updatePolls));
-
-
-
-
+   
+   let id = document.pollClientPollId;
+   
+   if( id ) {
+      ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', pollUrl, updatePoll, {id}));
+   }  else { 
+      ajaxFunctions.ready(ajaxFunctions.ajaxRequest('GET', pollsUrl, updatePolls));
+   }
 })();

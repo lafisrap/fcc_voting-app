@@ -46,6 +46,18 @@ function PollHandler () {
 			});
 	};
 
+	this.getSinglePoll = function (req, res) {
+		
+		let q = JSON.parse( req.query.json );
+
+		Polls
+			.findById(q.id).exec( (err, result) => {
+				if( err ) res.json({ error: err });
+				else res.json(result);
+			});
+	};
+
+
 	this.addPoll = function (req, res) {
 
 		if( !req.user ) {

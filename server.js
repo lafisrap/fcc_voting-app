@@ -6,13 +6,17 @@ var mongoose = require('mongoose');
 var passport = require('passport');
 var session = require('express-session');
 var bodyParser = require('body-parser');
-	
+var expressHandlebars  = require('express-handlebars');
+
 var app = express();
+
+app.engine('handlebars', expressHandlebars({defaultLayout: 'main'}));
+app.set('view engine', 'handlebars');
 
 // Set port for Heroku
 app.set('port', (process.env.PORT || 5000));
 
-//require('dotenv').load();
+if( process.env.HOSTSYSTEM !== "HEROKU") require('dotenv').load();
 require('./app/config/passport')(passport);
 
 mongoose.connect(process.env.MONGODB_URI);
